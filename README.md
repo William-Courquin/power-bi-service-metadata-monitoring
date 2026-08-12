@@ -2,10 +2,10 @@
 
 ## Contents
 
-- project-summary
-- problem
-- solution
-- architecture
+- # Project Summary
+- # Problem
+- # Solution
+- # Architecture
 
 
 ## Project Summary
