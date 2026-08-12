@@ -2,14 +2,11 @@
 
 ## Contents
 
-- #project-summary
-- #problem
-- #solution
-- #architecture
-- [power-automate-flow
-- [power-bi-dashboard
-- #screenshots
-- [Lessons-learned
+- project-summary
+- problem
+- solution
+- architecture
+
 
 ## Project Summary
 
