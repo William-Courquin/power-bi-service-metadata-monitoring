@@ -2,47 +2,53 @@
 
 ## Contents
 
-- # Project Summary
-- # Problem
-- # Solution
-- # Architecture
-
+- #project-summary
+- #problem
+- #solution-overview
+- #architecture
+- #power-automate-flow
+- #data-captured
+- #power-bi-dashboard
+- #screenshots
+- #lessons-learned
+- #future-improvements
 
 ## Project Summary
 
-This project monitors Power BI Service metadata, including workspaces, reports, dataflows and refresh activity.
+This project uses Power Automate to collect Power BI Service metadata and refresh information, then visualises the results in a Power BI dashboard.
 
 ## Problem
 
-There was no easy central view of refresh performance, report inventory or workspace-level metadata.
+There was no single view for monitoring workspace, report, dataflow and refresh metadata across the Power BI Service.
 
-## Solution
+## Solution Overview
 
-Power Automate collects metadata from the Power BI Service and stores it for reporting. Power BI is then used to visualise refresh trends, failures, workspace activity and report coverage.
+Power Automate collects metadata from the Power BI Service and stores it in a structured format. Power BI then connects to that data and provides a monitoring dashboard.
 
 ## Architecture
 
-Add a short explanation here, then include an image if useful.
-
-![Architecture diagramre.png
+Add your architecture notes or diagram here.
 
 ## Power Automate Flow
 
-Explain what the flow does:
-- Gets workspace details
-- Gets dataflow metadata
-- Gets report metadata
-- Gets refresh history
-- Writes results to the chosen storage layer
+Explain the flow logic here.
+
+## Data Captured
+
+List the metadata captured, such as workspaces, reports, dataflows and refresh history.
 
 ## Power BI Dashboard
 
-Explain the report pages and what each page shows.
+Explain the dashboard pages and key visuals.
 
 ## Screenshots
 
-screenshots/dashboard-overview.png
+Add screenshots here.
 
 ## Lessons Learned
 
-Summarise what you learned technically and what you would improve next.
+Summarise what you learnt.
+
+## Future Improvements
+
+List anything you would add next.
