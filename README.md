@@ -2,16 +2,16 @@
 
 ## Contents
 
-- ##project-summary
-- #problem
-- #solution-overview
-- #architecture
-- #power-automate-flow
-- #data-captured
-- #power-bi-dashboard
-- #screenshots
-- #lessons-learned
-- #future-improvements
+#project-summary
+#problem
+#solution-overview
+#architecture
+#power-automate-flow
+#data-captured
+#power-bi-dashboard
+#screenshots
+#lessons-learned
+#future-improvements
 
 # Project Summary
 
