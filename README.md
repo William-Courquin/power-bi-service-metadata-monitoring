@@ -2,7 +2,7 @@
 
 ## Contents
 
-- #project-summary
+- ##project-summary
 - #problem
 - #solution-overview
 - #architecture
@@ -13,7 +13,7 @@
 - #lessons-learned
 - #future-improvements
 
-## Project Summary
+# Project Summary
 
 This project uses Power Automate to collect Power BI Service metadata and refresh information, then visualises the results in a Power BI dashboard.
 
