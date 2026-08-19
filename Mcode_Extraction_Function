@@ -1,0 +1,385 @@
+(mCode as text) as table =>
+let
+    // STEP 1: Standardise the incoming M code into a consistent line-by-line format.
+    // Different exports can contain varying line-ending characters, so these are
+    // normalised before splitting the code into individual lines for analysis.
+    Normalized =
+        Text.Replace(
+            Text.Replace(mCode, "#(cr,lf)", "#(lf)"),
+            "#(cr)",
+            "#(lf)"
+        ),
+
+    Lines =
+        List.Select(
+            List.Transform(Text.Split(Normalized, "#(lf)"), each Text.Trim(_)),
+            each _ <> ""
+        ),
+
+    // STEP 2: Helper function used to extract the first quoted string from a line of M code.
+    // Commonly used to retrieve SharePoint site URLs from connector definitions.
+    GetFirstQuotedValue = (line as text) as nullable text =>
+        let
+            q1 = Text.PositionOf(line, """", Occurrence.First),
+            rest = if q1 >= 0 then Text.Range(line, q1 + 1) else null,
+            q2 = if rest <> null then Text.PositionOf(rest, """", Occurrence.First) else -1,
+            raw =
+                if rest = null then
+                    null
+                else if q2 >= 0 then
+                    Text.Start(rest, q2)
+                else
+                    rest,
+
+            apiPos = if raw <> null then Text.PositionOf(raw, " [", Occurrence.First) else -1,
+            cleaned =
+                if raw = null then
+                    null
+                else if apiPos >= 0 then
+                    Text.Start(raw, apiPos)
+                else
+                    raw
+        in
+            if cleaned = null then null else Text.Trim(cleaned),
+
+    // STEP 3: Helper function used to extract a quoted value that follows a specific key.
+    // Example:
+    // Name = "File.xlsx"
+    // #"Folder Path" = "https://site/folder/"
+    // Returns only the quoted value.
+    GetQuotedValueAfterKey = (line as text, key as text) as nullable text =>
+        let
+            pKey = Text.PositionOf(line, key, Occurrence.First),
+            result =
+                if pKey < 0 then
+                    null
+                else
+                    let
+                        afterKey = Text.Range(line, pKey + Text.Length(key)),
+                        eqPos = Text.PositionOf(afterKey, "=", Occurrence.First),
+                        afterEq = if eqPos >= 0 then Text.Range(afterKey, eqPos + 1) else "",
+                        q1 = Text.PositionOf(afterEq, """", Occurrence.First),
+                        rest = if q1 >= 0 then Text.Range(afterEq, q1 + 1) else "",
+                        q2 = Text.PositionOf(rest, """", Occurrence.First),
+                        value = if q2 >= 0 then Text.Start(rest, q2) else null
+                    in
+                        value
+        in
+            result,
+
+    // STEP 4: Extract all SharePoint navigation names from a navigation expression.
+    // Example:
+    // Source{[Name = "Folder"]}[Content]
+    // Returns:
+    // Folder
+    GetNamesFromLine = (line as text) as list =>
+        let
+            parts = List.Skip(Text.Split(line, "{["), 1),
+            names =
+                List.RemoveNulls(
+                    List.Transform(
+                        parts,
+                        each
+                            if Text.Contains(_, "Name") then
+                                GetQuotedValueAfterKey(_, "Name")
+                            else
+                                null
+                    )
+                )
+        in
+            names,
+
+    // STEP 5: Split the M code into individual shared query blocks.
+    // This allows each query to be analysed independently and prevents
+    // navigation chains from one query being linked to another.
+    BlockState =
+        List.Accumulate(
+            Lines,
+            [Blocks = {}, Current = {}],
+            (state, line) =>
+                if Text.StartsWith(line, "shared ") and List.Count(state[Current]) > 0 then
+                    [
+                        Blocks = state[Blocks] & {state[Current]},
+                        Current = {line}
+                    ]
+                else
+                    [
+                        Blocks = state[Blocks],
+                        Current = state[Current] & {line}
+                    ]
+        ),
+
+    Blocks =
+        if List.Count(BlockState[Current]) > 0 then
+            BlockState[Blocks] & {BlockState[Current]}
+        else
+            BlockState[Blocks],
+
+    // STEP 6: Helper functions used to:
+    // - Normalise URL formatting
+    // - Handle trailing slashes consistently
+    // - URL encode file and folder names
+    // - Reconstruct URLs from extracted navigation components
+    RemoveTrailingSlash = (txt as text) as text =>
+        if Text.EndsWith(txt, "/") then
+            Text.Start(txt, Text.Length(txt) - 1)
+        else
+            txt,
+
+    EnsureTrailingSlash = (txt as text) as text =>
+        if Text.EndsWith(txt, "/") then txt else txt & "/",
+
+    EncodeSpacesOnly = (txt as text) as text =>
+        Text.Replace(txt, " ", "%20"),
+
+    BuildUrl = (parts as list) as nullable text =>
+        let
+            cleanParts = List.RemoveNulls(parts),
+            result =
+                if List.Count(cleanParts) = 0 then
+                    null
+                else
+                    let
+                        base = RemoveTrailingSlash(cleanParts{0}),
+                        encodedParts =
+                            List.Transform(
+                                List.Skip(cleanParts, 1),
+                                each Uri.EscapeDataString(_)
+                            )
+                    in
+                        Text.Combine({base} & encodedParts, "/")
+        in
+            result,
+
+    // STEP 7: Analyse a single query block and identify SharePoint file references.
+    //
+    // Supported patterns:
+    // 1. SharePoint.Files with explicit Folder Path selectors
+    // 2. SharePoint.Contents navigation chains
+    // 3. Table.SelectRows file filters where file names are explicitly referenced
+    //
+    // Returns:
+    // FolderPath | Name | Url
+    RecordsFromBlock = (block as list) as list =>
+        let
+
+            // Detect whether the current query uses SharePoint.Files or
+            // SharePoint.Contents. These connectors expose paths differently
+            // and therefore require different parsing approaches.
+            HasSharePointFiles =
+                List.AnyTrue(
+                    List.Transform(
+                        block,
+                        each Text.Contains(_, "SharePoint.Files")
+                    )
+                ),
+
+            HasSharePointContents =
+                List.AnyTrue(
+                    List.Transform(
+                        block,
+                        each Text.Contains(_, "SharePoint.Contents")
+                    )
+                ),
+
+            // Extract the SharePoint site URL used as the root of any
+            // reconstructed file paths.
+            BaseUrls =
+                List.RemoveNulls(
+                    List.Transform(
+                        List.Select(
+                            block,
+                            each
+                                Text.Contains(_, "SharePoint.Contents")
+                                or Text.Contains(_, "SharePoint.Files")
+                        ),
+                        each GetFirstQuotedValue(_)
+                    )
+                ),
+
+            BaseUrl =
+                if List.Count(BaseUrls) > 0 then
+                    List.First(BaseUrls)
+                else
+                    null,
+
+            // Handle explicit SharePoint.Files selectors:
+            // Source{[Name="File.xlsx", #"Folder Path"="..."]}[Content]
+            //
+            // This provides the highest-confidence match because the full folder
+            // path is stored directly within the M code.
+            SharePointFilesSelectorLines =
+                List.Select(
+                    block,
+                    each
+                        HasSharePointFiles
+                        and Text.Contains(_, "{[")
+                        and Text.Contains(_, "Name")
+                        and Text.Contains(_, "Folder Path")
+                        and Text.Contains(_, "[Content]")
+                ),
+
+            SharePointFilesRecords =
+                List.RemoveNulls(
+                    List.Transform(
+                        SharePointFilesSelectorLines,
+                        each
+                            let
+                                fileName = GetQuotedValueAfterKey(_, "Name"),
+                                folderPathRaw = GetQuotedValueAfterKey(_, "Folder Path"),
+                                folderPath =
+                                    if folderPathRaw <> null then
+                                        EncodeSpacesOnly(EnsureTrailingSlash(folderPathRaw))
+                                    else if BaseUrl <> null then
+                                        EncodeSpacesOnly(EnsureTrailingSlash(BaseUrl))
+                                    else
+                                        null,
+                                fileUrl =
+                                    if folderPath <> null and fileName <> null then
+                                        folderPath & Uri.EscapeDataString(fileName)
+                                    else
+                                        null
+                            in
+                                if fileUrl <> null and Text.Contains(fileName, ".") then
+                                    [
+                                        FolderPath = folderPath,
+                                        Name = fileName,
+                                        Url = fileUrl
+                                    ]
+                                else
+                                    null
+                    )
+                ),
+
+            // Handle SharePoint.Contents navigation chains.
+            //
+            // Example:
+            // Site
+            // -> Folder A
+            // -> Folder B
+            // -> File.csv
+            //
+            // The navigation chain is rebuilt into a URL using the ordered
+            // sequence of Name references.
+            NavNames =
+                List.Combine(
+                    List.Transform(
+                        List.Select(
+                            block,
+                            each
+                                HasSharePointContents
+                                and Text.Contains(_, "{[")
+                                and Text.Contains(_, "Name")
+                        ),
+                        each GetNamesFromLine(_)
+                    )
+                ),
+
+            FilePositions =
+                List.Select(
+                    List.Positions(NavNames),
+                    each Text.Contains(NavNames{_}, ".")
+                ),
+
+            SharePointContentsRecords =
+                if BaseUrl = null or not HasSharePointContents then
+                    {}
+                else
+                    List.Transform(
+                        FilePositions,
+                        each
+                            let
+                                pos = _,
+                                fileName = NavNames{pos},
+                                folderNames = List.FirstN(NavNames, pos),
+                                folderUrl = BuildUrl({BaseUrl} & folderNames),
+                                fileUrl = BuildUrl({BaseUrl} & folderNames & {fileName})
+                            in
+                                [
+                                    FolderPath = folderUrl & "/",
+                                    Name = fileName,
+                                    Url = fileUrl
+                                ]
+                    ),
+
+            // Fallback handling for SharePoint.Files patterns that use
+            // Table.SelectRows filters. These often provide a file name
+            // but may not expose the complete folder path.
+            FilterLines =
+                List.Select(
+                    block,
+                    each
+                        HasSharePointFiles
+                        and Text.Contains(_, "Table.SelectRows")
+                        and Text.Contains(_, "[Name]")
+                ),
+
+            FilteredFileRecords =
+                List.RemoveNulls(
+                    List.Transform(
+                        FilterLines,
+                        each
+                            let
+                                fileName =
+                                    if Text.Contains(_, "[Name]") then
+                                        GetQuotedValueAfterKey(_, "[Name]")
+                                    else
+                                        GetQuotedValueAfterKey(_, "Name"),
+
+                                folderPathRaw =
+                                    if Text.Contains(_, "Folder Path") then
+                                        GetQuotedValueAfterKey(_, "Folder Path")
+                                    else
+                                        null,
+
+                                folderPath =
+                                    if folderPathRaw <> null then
+                                        EncodeSpacesOnly(EnsureTrailingSlash(folderPathRaw))
+                                    else if BaseUrl <> null then
+                                        EncodeSpacesOnly(EnsureTrailingSlash(BaseUrl))
+                                    else
+                                        null,
+
+                                fileUrl =
+                                    if folderPath <> null and fileName <> null then
+                                        folderPath & Uri.EscapeDataString(fileName)
+                                    else
+                                        null
+                            in
+                                if fileUrl <> null and Text.Contains(fileName, ".") then
+                                    [
+                                        FolderPath = folderPath,
+                                        Name = fileName,
+                                        Url = fileUrl
+                                    ]
+                                else
+                                    null
+                    )
+                )
+        in
+            SharePointFilesRecords & SharePointContentsRecords & FilteredFileRecords,
+
+    // STEP 8: Combine all extracted records, remove duplicates and
+    // return a clean table of unique SharePoint file references.
+    AllRecords =
+        List.RemoveNulls(
+            List.Combine(
+                List.Transform(Blocks, each RecordsFromBlock(_))
+            )
+        ),
+
+    AsTable =
+        if List.IsEmpty(AllRecords) then
+            #table({"FolderPath","Name","Url"}, {})
+        else
+            Table.FromRecords(AllRecords),
+
+    Distinct =
+        Table.Distinct(AsTable, {"FolderPath","Name","Url"}),
+
+    NonNullUrls =
+        Table.SelectRows(Distinct, each [Url] <> null)
+in
+    NonNullUrls
+
+// 19 Aug 2026 updated by will
