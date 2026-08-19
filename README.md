@@ -33,6 +33,23 @@ Explain the dashboard pages and key visuals.
 
 Add screenshots here.
 
+## Caveats
+
+### Dataflow - MCode Extraction Function
+
+Supports SharePoint.Files and SharePoint.Contents connectors.
+
+Explicit #"Folder Path" references are treated as the highest-confidence matches.
+
+SharePoint.Contents navigation chains are reconstructed using sequential navigation steps.
+
+Queries using Text.Contains([Folder Path], ...) may not expose the full folder structure.
+
+Dynamically generated paths and parameter-driven URLs cannot always be reconstructed.
+
+The function prioritises accuracy over inference and does not attempt to guess missing folder levels.
+
+
 ## Lessons Learned
 
 Summarise what you learnt.
