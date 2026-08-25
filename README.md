@@ -113,7 +113,7 @@ List the metadata captured, such as:
 
 ## Dataflow overview
 
-![Overviews/dataflow-overview.png
+![dataflow-overview.png
 
 
 ---
