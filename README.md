@@ -9,9 +9,8 @@
 -  ### [Project Summary](#solution-overview)
 
 -  ### [Power Automate](#power-automate)
-    -  #### [Overview](#overview)
     -  #### [API Catalogue](#api-catalogue)
-    -  #### [Caveats](#caveats)
+    -  #### [Loops](#loops)
 
 
 ---
@@ -97,19 +96,7 @@ Power BI Monitoring Dashboard
 
 ## Power Automate
 
-topics:
-
-- Power BI metadata collection.
-- Workspace inventory.
-- Dataflow inventory.
-- Refresh history collection.
-- M Code extraction.
-- SharePoint source analysis.
-- Data storage and refresh process.
-
-### Overview
-
-The basic concept of the flow is to extrapolate live service data using the Invoke action and dumping onto SharePoint as txt files for use in dataflows in the next stage. The concept is simple, however the use of loops and invoke actions exponentially increases the capacity and leads to errors and long runtimes, which required workarounds. 
+The basic concept of the Power automate flow is to extrapolate live service data using the Invoke action and dumping onto SharePoint as txt files for use in dataflows in the next stage. The concept is simple, however the use of loops and invoke actions exponentially increases the capacity and leads to errors and long runtimes, which required workarounds. 
 
 ### API Catalogue
 The first step was exploring the Microsoft catalogue of APIs to understand what is and is not accessible and to make not of the codes. These are what I will be using in the invoke actions within the flow. https://learn.microsoft.com/en-us/rest/api/power-bi/dataflows/get-dataflow-transactions#dataflowtransaction
