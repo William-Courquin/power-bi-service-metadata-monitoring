@@ -1,6 +1,6 @@
 # Power BI Service Metadata Monitoring
 
-## [Problem](#problem)
+## [Problem](#solution-overview)
 
 
 
