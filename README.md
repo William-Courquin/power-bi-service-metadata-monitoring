@@ -127,9 +127,18 @@ As the Invoke actions sometimes require the IDs of other items I have invoked, s
 
 List the metadata captured, such as:
 
-- Workspaces
-- Reports
-- Semantic Models
+- Apps
+-   Reports
+-     Workspace
+
+
+
+
+
+
+- -  Reports
+  - 
+-       Semantic Models
 - Dataflows
 - Refresh History
 - Refresh Status
