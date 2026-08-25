@@ -110,6 +110,12 @@ List the metadata captured, such as:
 - Source File Last Modified Date
 - Derived Data Lineage Information
 
+
+## Dataflow overview
+
+![Overviews/dataflow-overview.png
+
+
 ---
 
 ## Power BI Dashboard
