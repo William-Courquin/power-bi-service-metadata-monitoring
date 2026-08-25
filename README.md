@@ -6,7 +6,7 @@
 
 -  ### [The Problem](#problem)
 
--  ### [Project Summary](#solution-overview)
+-  ### [Solution Overview](#solution-overview)
 
 -  ### [Power Automate](#power-automate)
     -  #### [API Catalogue](#api-catalogue)
