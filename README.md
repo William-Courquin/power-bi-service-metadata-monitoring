@@ -92,6 +92,35 @@ Suggested topics:
 - SharePoint source analysis.
 - Data storage and refresh process.
 
+### Overview
+
+The basic concept of the flow is to extrapolate live service data using the Invoke action and dumping onto SharePoint as txt files for use in dataflows in the next stage. The concept is simple, however the use of loops and invoke actions exponentially increases the capacity and leads to errors and long runtimes, which required workarounds. 
+
+### API Catalogue
+The first step was exploring the Microsoft catalogue of APIs to understand what is and is not accessible and to make not of the codes. These are what I will be using in the invoke actions within the flow. https://learn.microsoft.com/en-us/rest/api/power-bi/dataflows/get-dataflow-transactions#dataflowtransaction
+
+### Invoke
+
+Invokes are APIs that can extrapolate data across service, outputting the data as JSON. Below is the list of data I was able to access to build the report. 
+
+- Workspaces
+- Apps
+- Semantic Models
+- Dataflows
+- Refreshes for both Model and Dataflows
+- Dataflow Entities
+- Dataflow parents
+- Dataflows used in Models
+- Workspace and Dataflow Users
+- Dataset Schedules
+- Dataflow MCode
+
+### Loops
+
+As the Invoke actions sometimes require the IDs of other items I have invoked, such as an invoke dataflow which requires a workspace ID, I looped through each workspace ID that was extracted from the previous invoke workspace action. Ontop of this, I append that data into an array 
+
+![Power automate Overview](Screenshots/Power_Auomate_Screenshot1.png)
+
 ---
 
 ## Data Captured
