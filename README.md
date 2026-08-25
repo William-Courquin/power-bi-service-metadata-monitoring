@@ -107,7 +107,7 @@ Invokes are APIs that can extrapolate data across service, outputting the data a
   - Users
   - Dataflows
     - Refreshes
-    - Mcodes
+    - Dataflow Mcode
     - Parent Dataflows
     - Entities
   - Semantic Models
@@ -119,7 +119,7 @@ Invokes are APIs that can extrapolate data across service, outputting the data a
 #### Caveats 
 
 - Available APIs
-  - APIs are not always consistent between the objects, such as refresh schedules that can only be pulled for models and not the dataflows. This means having to use other 
+  - APIs are not always consistent between the objects, such as refresh schedules that can only be pulled for models and not the dataflows. 
 
 - Dataflow Connections
   - Dataflow parents are only brought out by the API if the Entity that is used to bring in the parent dataflow is loaded in. Otherwise Service cannot see the connection. This is also true for the 'View item lineage' option within Service, so this is a limitation shared between the two.
