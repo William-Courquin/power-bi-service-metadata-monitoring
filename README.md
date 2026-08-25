@@ -128,26 +128,21 @@ As the Invoke actions sometimes require the IDs of other items I have invoked, s
 List the metadata captured, such as:
 
 - Apps
-  - Reports
-    - Workspace
-      - Dataflow
-      - Model
+- Reports
+    - Workspaces
+      - Users
+      - Dataflows
+        - Refreshes
+        - Mcode
+        - Parent Dataflows
+        - Entities
+      - Semantic Models
+        - Refreshes
+        - Refresh Schedules
+        - Dataflows used in model
+        - Users
 
 
-
-
-
-- -  Reports
-  - 
--       Semantic Models
-- Dataflows
-- Refresh History
-- Refresh Status
-- Dataflow M Code
-- SharePoint Source Files
-- SharePoint Source URLs
-- Source File Last Modified Date
-- Derived Data Lineage Information
 
 
 ## Dataflow overview
