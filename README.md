@@ -1,10 +1,23 @@
 # Power BI Service Metadata Monitoring
 
-## [Problem](#solution-overview)
+## Contents
+
+-  ### [Project Summary](#project-summary)
+
+-  ### [The Problem](#problem)
+
+-  ### [Project Summary](#solution-overview)
+
+-  ### [Power Automate](#power-automate)
+    -  #### [Overview](#overview)
+    -  #### [API Catalogue](#api-catalogue)
+    -  #### [Caveats](#caveats)
 
 
+---
 
-## Project Summary
+
+### Project Summary
 
 This project provides a centralised monitoring solution for Power BI Service assets using Power Automate and Power BI.
 
@@ -82,11 +95,9 @@ Power BI Monitoring Dashboard
 
 ---
 
-## Power Automate Flow
+## Power Automate
 
-Explain the flow logic here.
-
-Suggested topics:
+topics:
 
 - Power BI metadata collection.
 - Workspace inventory.
