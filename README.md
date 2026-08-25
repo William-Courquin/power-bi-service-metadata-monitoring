@@ -99,8 +99,6 @@ The basic concept of the flow is to extrapolate live service data using the Invo
 ### API Catalogue
 The first step was exploring the Microsoft catalogue of APIs to understand what is and is not accessible and to make not of the codes. These are what I will be using in the invoke actions within the flow. https://learn.microsoft.com/en-us/rest/api/power-bi/dataflows/get-dataflow-transactions#dataflowtransaction
 
-### Invoke
-
 Invokes are APIs that can extrapolate data across service, outputting the data as JSON. Below is the list of data I was able to access to build the report. 
 
 - Apps
@@ -119,6 +117,16 @@ Invokes are APIs that can extrapolate data across service, outputting the data a
     - Users
 
 #### Caveats 
+
+- Available APIs
+  - APIs are not always consistent between the objects, such as refresh schedules that can only be pulled for models and not the dataflows. This means having to use other 
+
+- Dataflow Connections
+  - Dataflow parents are only brought out by the API if the Entity that is used to bring in the parent dataflow is loaded in. Otherwise Service cannot see the connection. This is also true for the 'View item lineage' option within Service, so this is a limitation shared between the two.
+        
+- Dataflow Sources
+  - Any source files used by dataflows such as SharePoint files cannot be picked up exactly by an API. There is an ability to flag if it using a SharePoint file but not much other data is provided so useless to extract. The way around this is to extract the dataflows MCode and find the data within that code. It is less elegant and prone to caveats but I will touch on this more later on. 
+
 
 ### Loops
 
@@ -170,7 +178,6 @@ Add screenshots here.
 
 ---
 
-## Caveats
 
 ### Dataflow M Code Extraction Function
 
