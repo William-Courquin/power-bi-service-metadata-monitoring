@@ -137,6 +137,17 @@ As the Invoke actions sometimes require the IDs of other items I have invoked, s
 
 ![Power automate Overview](Screenshots/Power_Auomate_Screenshot1.png)
 
+#### Append array to array trick
+When invoking a request such as a datasets refreshes history, you are outputted a JSON array of the refreshes. In theory you would want to append these together with every other loop of this output so you end up with the refresh history of all datasets. The issue with this logic is that Power automate does not allow you to append an array to an array variable, even if it looks like it should work. This error pushes you to loop the output through an append to variable, but this heavily impacts the run time and also easily hits caps. The fact you already have the list before looping means this is heavily inefficient. I tried different combinations of compose actions and appends but finally found a logic that somehow beats the system.
+
+Firstly you 'PARSE' the JSON which allows you to then use a 'Select' action to choose the specific fields you want. This action also allows you to make changes to the data to suit your logic. For example, I wanted to adjust the date/time of the refreshes to output as GMT Standard, something which you can't do in powerquery and that also means you're tidying data even before downloading. 
+
+This is the code I used for the date/time conversion.
+
+convertTimeZone(item()?['startTime'], 'UTC', 'GMT Standard Time', 'dd/MM/yyyy HH:mm:ss')
+
+Another helpful tip is to think about instances this action could break the json we build later on. For example, a refresh that is currently happening will not output with an end time and then ruin the formatting, as well as not being 
+
 ---
 
 ## Power BI Dashboard
