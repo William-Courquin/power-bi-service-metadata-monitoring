@@ -140,13 +140,20 @@ As the Invoke actions sometimes require the IDs of other items I have invoked, s
 #### Append array to array trick
 When invoking a request such as a datasets refreshes history, you are outputted a JSON array of the refreshes. In theory you would want to append these together with every other loop of this output so you end up with the refresh history of all datasets. The issue with this logic is that Power automate does not allow you to append an array to an array variable, even if it looks like it should work. This error pushes you to loop the output through an append to variable, but this heavily impacts the run time and also easily hits caps. The fact you already have the list before looping means this is heavily inefficient. I tried different combinations of compose actions and appends but finally found a logic that somehow beats the system.
 
-Firstly you 'PARSE' the JSON which allows you to then use a 'Select' action to choose the specific fields you want. This action also allows you to make changes to the data to suit your logic. For example, I wanted to adjust the date/time of the refreshes to output as GMT Standard, something which you can't do in powerquery and that also means you're tidying data even before downloading. 
+Firstly you 'PARSE' the JSON which allows you to then use a 'Select' action to choose the specific fields you want. This action also allows you to make changes to the data to suit your logic. For example, I wanted to adjust the date/time of the refreshes to output as GMT Standard, something which you can't do in Powerquery and that also means you're tidying data even before downloading. 
 
 This is the code I used for the date/time conversion.
 
 convertTimeZone(item()?['startTime'], 'UTC', 'GMT Standard Time', 'dd/MM/yyyy HH:mm:ss')
 
-Another helpful tip is to think about instances this action could break the json we build later on. For example, a refresh that is currently happening will not output with an end time and then ruin the formatting, as well as not being 
+Another helpful tip is to think about instances this action could break the JSON we build later on. For example, a refresh that is currently happening will not output with an end time and then ruin the formatting, as well as not being needed within the dataset. So you can place a filter after the parse JSON action to filter to filter out specific actions or blanks before they are then appended. 
+
+The last step is to compose the results to allow us to append to an array without it realising that what we are appending is an array. What we do is use an if statement to bring back an empty input as a blank. It's this If statement that seems to trick automate into seeing it as pure text. We then add a comma to the array if it returns not empty, keeping with a JSON format.
+
+if(empty(body('Select')), '', join(body('Select'), ','))
+
+We then run through a condition where if it is empty we do nothing, else we append to our array variable. We are then left with an array variable that is filled with an array of arrays. It does mean we need to open the JSON later within Powerquery but we've bypassed having to run a loop for every object. 
+
 
 ---
 
